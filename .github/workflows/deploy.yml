@@ -87,10 +87,10 @@ jobs:
       run: terraform init -lockfile=readonly
 
     # 12. Aplica los cambios del job ci siempre y cuando sea un push a main (no PR)
-    - name: Terraform Apply
-      run: terraform apply tfplan
-    #- name: Terraform Destroy
-    #  run: terraform destroy -auto-approve
-    #  env:
-    #    TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-    #    TF_VAR_my_public_ip: ${{ secrets.MY_PUBLIC_IP }}
+    #- name: Terraform Apply
+    #  run: terraform apply tfplan
+    - name: Terraform Destroy
+      run: terraform destroy -auto-approve
+      env:
+        TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+        TF_VAR_my_public_ip: ${{ secrets.MY_PUBLIC_IP }}
