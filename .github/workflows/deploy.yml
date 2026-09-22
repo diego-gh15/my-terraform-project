@@ -1,0 +1,96 @@
+name: "Terraform CI/CD Pipeline"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]   
+
+permissions:
+  id-token: write  # Obligatorio para solicitar el token OIDC
+  contents: read   # Obligatorio para clonar el repositorio
+
+jobs:
+  ci:
+    name: "Terraform CI"
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Descarga el código del repositorio a la máquina de GitHub
+    - name: Checkout del código
+      uses: actions/checkout@v4
+
+    # 2. Configura Terraform en la versión deseada
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v4
+
+    # 3. Autenticacion mediante OIDC (OpenID Connect) para GitHub Actions v6.2.4
+    - name: Autenticar en AWS vía OIDC
+      uses: aws-actions/configure-aws-credentials@v6.2.4
+      with:
+        role-to-assume: arn:aws:iam::577018705227:role/github-actions-terraform-role
+        aws-region: us-east-1
+        
+    # 4. Conecta con el backend en S3 que ya configuraste
+    - name: Terraform Init
+      run: terraform init -lockfile=readonly
+
+    # 5. Revisa la sintaxis de tu código
+    - name: Terraform Validate
+      run: terraform validate
+
+    # 6. Muestra el plan de cambios
+    - name: Terraform Plan
+      run: terraform plan -input=false -out=tfplan
+      env:
+        TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+        TF_VAR_my_public_ip: ${{ secrets.MY_PUBLIC_IP }}
+    
+    # 7. Sube el archivo tfplan como Artefacto
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: tfplan
+        path: tfplan
+        retention-days: 1 # Mantener solo durante el flujo de trabajo
+  
+  cd:
+    name: "Terraform CD"
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Descarga el código del repositorio a la máquina de GitHub
+    - name: Checkout del código
+      uses: actions/checkout@v4
+
+    # 8. Descarga de Artefacto
+    - name: Download Artifact created in job ci
+      uses: actions/download-artifact@v4
+      with:
+        name: tfplan
+    
+    # 9. Autenticacion mediante OIDC (OpenID Connect) para GitHub Actions v6.2.4
+    - name: Autenticar en AWS vía OIDC
+      uses: aws-actions/configure-aws-credentials@v6.2.4
+      with:
+        role-to-assume: arn:aws:iam::577018705227:role/github-actions-terraform-role
+        aws-region: us-east-1
+    
+    # 10. Configurar Terraform    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v4
+
+    # 11. Inicializar Terraform
+    - name: Terraform Init
+      run: terraform init -lockfile=readonly
+
+    # 12. Aplica los cambios del job ci siempre y cuando sea un push a main (no PR)
+    - name: Terraform Apply
+      run: terraform apply tfplan
+    #- name: Terraform Destroy
+    #  run: terraform destroy -auto-approve
+    #  env:
+    #    TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+    #    TF_VAR_my_public_ip: ${{ secrets.MY_PUBLIC_IP }}
