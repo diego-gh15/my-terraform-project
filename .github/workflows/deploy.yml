@@ -18,7 +18,7 @@ jobs:
     steps:
     # 1. Descarga el código del repositorio a la máquina de GitHub
     - name: Checkout del código
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     # 2. Configura Terraform en la versión deseada
     - name: Setup Terraform
@@ -63,7 +63,7 @@ jobs:
     steps:
     # 1. Descarga el código del repositorio a la máquina de GitHub
     - name: Checkout del código
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     # 8. Descarga de Artefacto
     - name: Download Artifact created in job ci
