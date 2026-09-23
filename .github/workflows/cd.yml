@@ -1,0 +1,45 @@
+name: "Terraform CD Pipeline"
+
+on:
+  push:
+    branches: [ "main" ]   
+
+permissions:
+  id-token: write  # Obligatorio para solicitar el token OIDC
+  contents: read   # Obligatorio para clonar el repositorio
+
+jobs:
+  cd:
+    name: "Terraform CD"
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Descarga el código del repositorio a la máquina de GitHub
+    - name: Checkout del código
+      uses: actions/checkout@v4
+    
+    # 2. Configurar Terraform    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v4
+
+    # 3. Autenticacion mediante OIDC (OpenID Connect) para GitHub Actions v6.2.4
+    - name: Autenticar en AWS vía OIDC
+      uses: aws-actions/configure-aws-credentials@v6.2.4
+      with:
+        role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-actions-terraform-cd-role
+        aws-region: us-east-1
+    
+    # 4. Inicializar Terraform
+    - name: Terraform Init
+      run: terraform init -lockfile=readonly
+
+    # 5. Aplica los cambios aprobados en ci.yml
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+    
+    # 5. Destruye los recursos propuestos y aprobados en ci.yml
+    #- name: Terraform Destroy
+    #  run: terraform destroy -auto-approve
+    #  env:
+    #    TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+    #    TF_VAR_my_public_ip: ${{ vars.MY_PUBLIC_IP }}
