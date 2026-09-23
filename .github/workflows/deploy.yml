@@ -28,7 +28,7 @@ jobs:
     - name: Autenticar en AWS vía OIDC
       uses: aws-actions/configure-aws-credentials@v6.2.4
       with:
-        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-terraform-role
+        role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-actions-terraform-role
         aws-region: us-east-1
         
     # 4. Conecta con el backend en S3 que ya configuraste
@@ -75,7 +75,7 @@ jobs:
     - name: Autenticar en AWS vía OIDC
       uses: aws-actions/configure-aws-credentials@v6.2.4
       with:
-        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-terraform-role
+        role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-actions-terraform-role
         aws-region: us-east-1
     
     # 10. Configurar Terraform    
