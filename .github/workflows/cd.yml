@@ -33,12 +33,19 @@ jobs:
     - name: Terraform Init
       run: terraform init -lockfile=readonly
 
-    # 5. Aplica los cambios aprobados en ci.yml
+    # 5. Muestra el plan de cambios
+    - name: Terraform Plan
+      run: terraform plan -input=false -out=tfplan
+      env:
+        TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+        TF_VAR_my_public_ip: ${{ vars.MY_PUBLIC_IP }}
+
+    # 6. Aplica los cambios aprobados en ci.yml
     - name: Terraform Apply
-      run: terraform apply -auto-approve
-    
-    # 5. Destruye los recursos propuestos y aprobados en ci.yml
-    #- name: Terraform Destroy
+      run: terraform apply tfplan
+
+    # 6. Destruye los recursos propuestos y aprobados en ci.yml    
+      #- name: Terraform Destroy
     #  run: terraform destroy -auto-approve
     #  env:
     #    TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
