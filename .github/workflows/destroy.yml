@@ -20,7 +20,7 @@ jobs:
         uses: hashicorp/setup-terraform@v4
 
       - name: Configure AWS Credentials (CD Role)
-        uses: aws-actions/configure-aws-credentials@v6.2.4
+        uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-actions-terraform-cd-role
           aws-region: us-east-1
